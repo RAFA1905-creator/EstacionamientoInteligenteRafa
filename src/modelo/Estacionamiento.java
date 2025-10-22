@@ -10,6 +10,7 @@ public class Estacionamiento {
     private final int capacidadMaxima = 5;
     private final Semaphore semaforo = new Semaphore(capacidadMaxima);
     private final ArrayList<Coche> cochesAparcados = new ArrayList<>();
+    private int contadorCoches = 0;
 
     public boolean entrar(Coche coche) {
         boolean aparcado = false;
@@ -53,6 +54,7 @@ public class Estacionamiento {
 
         if (aparcado == true) {
             System.out.println(coche.toString() + " ha aparcado.");
+            contadorCoches++;
         } else {
             System.out.println(coche + " no ha podido aparcar y se ha ido.");
         }
@@ -80,5 +82,11 @@ public class Estacionamiento {
             }
         }
     }
+
+    public void estadisticasFinales(int totalCoches) {
+        System.out.println("Estadísticas finales:");
+        System.out.println("- Han aparcado " + contadorCoches + " de " + totalCoches);
+    }
+
 
 }

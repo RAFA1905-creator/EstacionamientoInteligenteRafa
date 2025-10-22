@@ -38,5 +38,8 @@ public class main {
 
         System.out.println("No quedan coches en el estacionamiento.");
 
+        //Detener estado en tiempo real
+        estacionamiento.estadisticasFinales(hilos.length);
+
     }
 }
