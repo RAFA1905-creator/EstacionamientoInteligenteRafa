@@ -1,7 +1,9 @@
 package modelo;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class Estacionamiento {
 
@@ -12,41 +14,71 @@ public class Estacionamiento {
     public boolean entrar(Coche coche) {
         boolean aparcado = false;
 
-        if (coche.esVip() == true) {
+        if (coche.esVip() == false) {
             try {
-                semaforo.acquire();
-                synchronized (cochesAparcados) {
-                    if (cochesAparcados.size() >= capacidadMaxima) {
-                        desalojarCocheNormal(coche);
+                if (semaforo.tryAcquire(5, TimeUnit.SECONDS)) {
+                    synchronized (cochesAparcados) {
                         cochesAparcados.add(coche);
-
                         aparcado = true;
                     }
                 }
-            } catch(Exception e) {}
-        } else if (coche.esVip() == false) {
+            } catch (Exception e) {
+                System.out.println("Problema de " + coche.toString() + "al aparcar: " + e);
+                return aparcado;
+            }
+        } else if (coche.esVip() == true) {
             try {
-                if (semaforo.tryAcquire(5)) {
-                    cochesAparcados.add(coche);
+                synchronized (cochesAparcados) {
+                    if (cochesAparcados.size() >= capacidadMaxima) {
+                        // Está lleno, desalojar un coche normal (esto libera un permiso)
+                        desalojarCocheNormal(coche);
+                    } else {
+                        // Si no está lleno, ocupa un permiso normal
+                        semaforo.acquire();
+                    }
 
+                    // Aparca el coche VIP
+                    cochesAparcados.add(coche);
                     aparcado = true;
-                } else {
-                    System.out.println(coche + " ha abandonado la cola del estacionamiento.");
                 }
-            } catch(Exception e) {}
+
+            } catch (Exception e) {
+                System.out.println("Problema de " + coche.toString() + "al aparcar: " + e);
+
+            }
+
+
         }
+
+
+        if (aparcado == true) {
+            System.out.println(coche.toString() + " ha aparcado.");
+        } else {
+            System.out.println(coche + " no ha podido aparcar y se ha ido.");
+        }
+
         return aparcado;
     }
-    public void desalojarCocheNormal(Coche cocheVip) {
+
+    public void salir(Coche coche) {
         synchronized (cochesAparcados) {
-            for (Coche coche : cochesAparcados) {
-                if (!coche.esVip()) {
-                    cochesAparcados.remove(coche);
-                    semaforo.release();
-                    System.out.println(coche + " fue desalojado por " + cocheVip);
-                    break;
-                }
+            if (cochesAparcados.remove(coche)) {
+                semaforo.release();
+                System.out.println(coche + " ha salido del estacionamiento.");
             }
         }
     }
+
+    public void desalojarCocheNormal(Coche cocheVip) {
+        for (int i = 0; i < cochesAparcados.size(); i++) {
+            Coche coche = cochesAparcados.get(i);
+            if (!coche.esVip()) {
+                cochesAparcados.remove(i);
+                semaforo.release();
+                System.out.println(coche + " fue desalojado por " + cocheVip);
+                break;
+            }
+        }
+    }
+
 }

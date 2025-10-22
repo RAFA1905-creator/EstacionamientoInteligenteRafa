@@ -1,15 +1,18 @@
 package modelo;
 
-public class Coche {
+public class Coche implements Runnable {
 
     private String nombre;
     private boolean vip;
     private Estacionamiento estacionamiento;
 
-    public boolean esVip() {
-        return vip;
+    public Coche(String nombre, boolean vip, Estacionamiento estacionamiento) {
+        this.nombre = nombre;
+        this.vip = vip;
+        this.estacionamiento = estacionamiento;
     }
 
+    @Override
     public void run() {
         boolean aparcado = estacionamiento.entrar(this);
         if (aparcado == true) {
@@ -19,8 +22,17 @@ public class Coche {
             } catch (Exception e) {
                 Thread.currentThread().interrupt();
             } finally {
-                //TODO: SALIR DEL ESTACIONAMIENTO
+                estacionamiento.salir(this);
             }
         }
+    }
+
+    public boolean esVip() {
+        return vip;
+    }
+
+    @Override
+    public String toString() {
+        return nombre + (vip ? " (VIP)" : " (Normal)");
     }
 }
